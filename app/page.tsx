@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { InventorySummary, InventoryMovement, Sale } from "@/lib/type";
+import type { InventorySummary, InventoryMovement, Sale, TrackingLocation } from "@/lib/type";
 
 // Components
 import QuickActions from "./components/QuickActions";
 import RecentActivity from "./components/RecentActivity";
 import SalesChart from "./components/SalesChart";
 import InventoryOverview from "./components/InventoryOverview";
+import LiveTracking from "./components/LiveTracking";
 
 export default function Dashboard() {
   const [inventory, setInventory] = useState<InventorySummary[]>([]);
@@ -15,6 +16,8 @@ export default function Dashboard() {
     []
   );
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
+    const [tracking, setTracking] = useState<TrackingLocation[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -32,6 +35,7 @@ export default function Dashboard() {
       setInventory(data.inventory || []);
       setRecentMovements(data.movements || []);
       setRecentSales(data.sales || []);
+      setTracking(data.tracking || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -92,6 +96,8 @@ export default function Dashboard() {
         />
         <SalesChart sales={recentSales} />
       </div>
+    <LiveTracking tracking={tracking} />
+
     </div>
   );
 }

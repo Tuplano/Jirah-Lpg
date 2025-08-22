@@ -33,3 +33,10 @@ export interface InventorySummary {
   out_for_delivery: number;
   total_tanks: number;
 }
+
+export interface TrackingLocation {
+  latitude: number;
+  longitude: number;
+  date: string;  
+  driver_id: string; 
+}

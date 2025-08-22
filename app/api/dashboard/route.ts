@@ -22,6 +22,13 @@ export async function GET(req: Request) {
       .select("*");
     if (salesError) throw salesError;
 
+    const { data: trackingData, error: trackingError } = await supabase
+      .from("locations")
+      .select("*")
+      .gte("date", `${selectedDate}T00:00:00`)
+      .lte("date", `${selectedDate}T23:59:59`);
+    if (trackingError) throw trackingError;
+
     const summary = tanksData.map((tank) => {
       const deliveriesOnDate = movementsData
         .filter(
@@ -37,7 +44,8 @@ export async function GET(req: Request) {
           (m) =>
             m.type === "sale" &&
             m.tank_size === tank.size &&
-            m.date && new Date(m.date) <= new Date(selectedDate + "T23:59:59")
+            m.date &&
+            new Date(m.date) <= new Date(selectedDate + "T23:59:59")
         )
         .reduce((sum, m) => sum + (m.quantity || 0), 0);
 
@@ -46,7 +54,8 @@ export async function GET(req: Request) {
           (m) =>
             m.type === "replenishment" &&
             m.tank_size === tank.size &&
-            m.date && new Date(m.date) <= new Date(selectedDate + "T23:59:59")
+            m.date &&
+            new Date(m.date) <= new Date(selectedDate + "T23:59:59")
         )
         .reduce((sum, m) => sum + (m.quantity || 0), 0);
 
@@ -65,7 +74,9 @@ export async function GET(req: Request) {
     });
 
     const filteredMovements = movementsData
-      .filter((m) => m.date && new Date(m.date) <= new Date(selectedDate + "T23:59:59"))
+      .filter(
+        (m) => m.date && new Date(m.date) <= new Date(selectedDate + "T23:59:59")
+      )
       .slice(0, 10)
       .reverse();
 
@@ -78,6 +89,7 @@ export async function GET(req: Request) {
       inventory: summary,
       movements: filteredMovements,
       sales: filteredSales,
+      tracking: trackingData || [],
     });
   } catch (err) {
     console.error(err);
