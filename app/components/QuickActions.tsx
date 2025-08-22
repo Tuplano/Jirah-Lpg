@@ -13,40 +13,64 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
 
   const tankSizes = ["11kg", "2.7kg"];
 
+  const getLocalDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+
   // ---------------- HANDLERS ----------------
-const handleAddStock = async (date: string, tank_size: string, quantity: number) => {
-  try {
-    const res = await fetch("/api/movements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date, type: "add_stock", tank_size, quantity }),
-    });
+  const handleAddStock = async (
+    date: string,
+    tank_size: string,
+    quantity: number
+  ) => {
+    try {
+      const res = await fetch("/api/movements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, type: "add_stock", tank_size, quantity }),
+      });
 
-    if (!res.ok) throw new Error("Failed to add stock");
-    setShowReplenishForm(false);
-    onActionComplete();
-  } catch (err) {
-    console.error(err);
-    alert(err instanceof Error ? err.message : "Unexpected error");
-  }
-};
+      if (!res.ok) throw new Error("Failed to add stock");
+      setShowReplenishForm(false);
+      onActionComplete();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Unexpected error");
+    }
+  };
 
-const handleReplenish = async (date: string, tank_size: string, quantity: number) => {
-  try {
-    const res = await fetch("/api/movements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date, type: "replenishment", tank_size, quantity }),
-    });
+  const handleReplenish = async (
+    date: string,
+    tank_size: string,
+    quantity: number
+  ) => {
+    try {
+      const res = await fetch("/api/movements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date,
+          type: "replenishment",
+          tank_size,
+          quantity,
+        }),
+      });
 
-    if (!res.ok) throw new Error("Failed to record replenishment");
-    setShowReplenishForm(false);
-    onActionComplete();
-  } catch (err) {
-    console.error(err);
-    alert(err instanceof Error ? err.message : "Unexpected error");
-  }
-};
+      if (!res.ok) throw new Error("Failed to record replenishment");
+      setShowReplenishForm(false);
+      onActionComplete();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Unexpected error");
+    }
+  };
 
   const handleDelivery = async (
     date: string,
@@ -148,7 +172,6 @@ const handleReplenish = async (date: string, tank_size: string, quantity: number
         </button>
       </div>
 
-      {/* Replenishment Modal */}
       {/* Replenishment / Add Stock Modal */}
       {showReplenishForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
@@ -158,11 +181,12 @@ const handleReplenish = async (date: string, tank_size: string, quantity: number
             </h3>
             <div className="space-y-4">
               <input
-                type="date"
+                type="datetime-local"
                 id="replenish-date"
-                defaultValue={new Date().toISOString().split("T")[0]}
+  defaultValue={getLocalDateTime()}
                 className="w-full border rounded px-3 py-2"
               />
+
               <select
                 id="replenish-size"
                 className="w-full border rounded px-3 py-2"
@@ -250,9 +274,9 @@ const handleReplenish = async (date: string, tank_size: string, quantity: number
             <h3 className="text-lg font-medium mb-4">Record Delivery</h3>
             <div className="space-y-4">
               <input
-                type="date"
+                type="datetime-local"
                 id="delivery-date"
-                defaultValue={new Date().toISOString().split("T")[0]}
+  defaultValue={getLocalDateTime()}
                 className="w-full border rounded px-3 py-2"
               />
               <select
@@ -327,9 +351,9 @@ const handleReplenish = async (date: string, tank_size: string, quantity: number
             <h3 className="text-lg font-medium mb-4">Record Sale</h3>
             <div className="space-y-4">
               <input
-                type="date"
+                type="datetime-local"
                 id="sale-date"
-                defaultValue={new Date().toISOString().split("T")[0]}
+  defaultValue={getLocalDateTime()}
                 className="w-full border rounded px-3 py-2"
               />
               <input

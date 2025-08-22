@@ -6,9 +6,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { date, type, tank_size, quantity, customer_name } = body;
 
+    // Convert local datetime to UTC
+    const utcDate = new Date(date).toISOString();
+
     const { data, error } = await supabase.from('inventory_movements').insert([
       {
-        date,
+        date: utcDate,
         type,
         tank_size,
         quantity,
@@ -19,15 +22,13 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     if (type === 'add_stock') {
-      const { error: tankError } = await supabase.from('tanks').insert(
-        [
-          {
-            size: tank_size,
-            quantity,
-            date,
-          },
-        ],
-      );
+      const { error: tankError } = await supabase.from('tanks').insert([
+        {
+          size: tank_size,
+          quantity,
+          date: utcDate, 
+        },
+      ]);
 
       if (tankError) throw tankError;
     }
@@ -35,6 +36,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ success: false, error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
