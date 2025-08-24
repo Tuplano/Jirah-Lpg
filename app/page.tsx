@@ -18,11 +18,8 @@ import LocationSender from "./components/LocationSender";
 
 export default function Dashboard() {
   const [mode, setMode] = useState<"live" | "record">("live");
-
   const [inventory, setInventory] = useState<InventorySummary[]>([]);
-  const [recentMovements, setRecentMovements] = useState<InventoryMovement[]>(
-    []
-  );
+  const [recentMovements, setRecentMovements] = useState<InventoryMovement[]>([]);
   const [tracking, setTracking] = useState<TrackingLocation[]>([]);
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +27,6 @@ export default function Dashboard() {
     const today = new Date().toISOString().split("T")[0];
     return today;
   });
-
   const [recording, setRecording] = useState(false);
 
   const loadData = async (date: string = selectedDate) => {
@@ -58,21 +54,23 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <div className="text-sm text-gray-500">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <div className="text-xs sm:text-sm text-gray-500">
           Last updated: {new Date().toLocaleString()}
         </div>
       </div>
 
-      <div className="flex items-center space-x-4 mb-4">
+      {/* Date Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
         <label
           htmlFor="inventory-date"
           className="text-sm font-medium text-gray-700"
@@ -84,10 +82,11 @@ export default function Dashboard() {
           id="inventory-date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="border border-gray-300 rounded-md p-2 text-sm"
+          className="border border-gray-300 rounded-md p-2 text-sm w-full sm:w-auto"
         />
       </div>
 
+      {/* Inventory + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InventoryOverview inventory={inventory} />
@@ -97,19 +96,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <RecentActivity
-      movements={recentMovements}
-      selectedDate={selectedDate}
-    />
-    <SalesChart sales={recentSales} />
-</div>
+      {/* Recent Activity + Sales */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentActivity movements={recentMovements} selectedDate={selectedDate} />
+        <SalesChart sales={recentSales} />
+      </div>
 
-
-      <div className="mt-4 flex flex-wrap justify-between items-center">
-        <div className="flex bg-gray-200 rounded-lg overflow-hidden shadow">
+      {/* Mode Switch + Recording */}
+      <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div className="flex bg-gray-200 rounded-lg overflow-hidden shadow w-full sm:w-auto">
           <button
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition ${
               mode === "live"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -119,7 +116,7 @@ export default function Dashboard() {
             🚀 Live Mode
           </button>
           <button
-            className={`px-4 py-2 text-sm font-medium transition ${
+            className={`flex-1 px-4 py-2 text-sm font-medium transition ${
               mode === "record"
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -131,7 +128,7 @@ export default function Dashboard() {
         </div>
 
         <button
-          className={`px-4 py-2 rounded-lg shadow font-medium transition ${
+          className={`px-4 py-2 rounded-lg shadow font-medium transition w-full sm:w-auto ${
             recording
               ? "bg-red-500 hover:bg-red-600"
               : "bg-green-500 hover:bg-green-600"
@@ -144,6 +141,7 @@ export default function Dashboard() {
 
       {recording && <LocationSender driverId="driver_123" />}
 
+      {/* Live Tracking */}
       <div className="mt-4">
         <LiveTracking tracking={tracking} mode={mode} />
       </div>
