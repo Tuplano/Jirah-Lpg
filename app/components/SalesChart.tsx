@@ -33,7 +33,7 @@ export default function SalesChart({ sales }: SalesChartProps) {
   const totalQuantity = getTotalSales();
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+  <div className="max-h-96 overflow-y-auto rounded-lg shadow p-5 bg-white">
       <h2 className="text-lg font-medium text-gray-900 mb-4">Sales Overview</h2>
       
       <div className="grid grid-cols-2 gap-4 mb-6">

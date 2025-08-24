@@ -6,7 +6,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { date, type, tank_size, quantity, customer_name } = body;
 
-    // Convert local datetime to UTC
     const utcDate = new Date(date).toISOString();
 
     const { data, error } = await supabase.from('inventory_movements').insert([
@@ -22,13 +21,28 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     if (type === 'add_stock') {
-      const { error: tankError } = await supabase.from('tanks').insert([
-        {
-          size: tank_size,
-          quantity,
-          date: utcDate, 
-        },
-      ]);
+      const { data: existingTank, error: fetchError } = await supabase
+        .from('tanks')
+        .select('quantity')
+        .eq('size', tank_size)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError; 
+      }
+
+      const newQuantity = existingTank ? existingTank.quantity + quantity : quantity;
+
+      const { error: tankError } = await supabase
+        .from('tanks')
+        .upsert(
+          {
+            size: tank_size,
+            quantity: newQuantity,
+            date: utcDate,
+          },
+          { onConflict: 'size' }
+        );
 
       if (tankError) throw tankError;
     }

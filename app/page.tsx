@@ -65,7 +65,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="text-sm text-gray-500">
@@ -73,7 +72,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Date picker */}
       <div className="flex items-center space-x-4 mb-4">
         <label
           htmlFor="inventory-date"
@@ -90,7 +88,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InventoryOverview inventory={inventory} />
@@ -100,14 +97,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Activity + Sales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentActivity
-          movements={recentMovements}
-          selectedDate={selectedDate}
-        />
-        <SalesChart sales={recentSales} />
-      </div>
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <RecentActivity
+      movements={recentMovements}
+      selectedDate={selectedDate}
+    />
+    <SalesChart sales={recentSales} />
+</div>
+
 
       <div className="mt-4 flex flex-wrap justify-between items-center">
         <div className="flex bg-gray-200 rounded-lg overflow-hidden shadow">
@@ -133,7 +130,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Start/Stop Recording on the right */}
         <button
           className={`px-4 py-2 rounded-lg shadow font-medium transition ${
             recording
