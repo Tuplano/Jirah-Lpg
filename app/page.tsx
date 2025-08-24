@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { InventorySummary, InventoryMovement, Sale, TrackingLocation } from "@/lib/type";
+import type {
+  InventorySummary,
+  InventoryMovement,
+  Sale,
+} from "@/lib/type";
 
 // Components
 import QuickActions from "./components/QuickActions";
@@ -9,6 +13,7 @@ import RecentActivity from "./components/RecentActivity";
 import SalesChart from "./components/SalesChart";
 import InventoryOverview from "./components/InventoryOverview";
 import LiveTracking from "./components/LiveTracking";
+import LocationSender from "./components/LocationSender";
 
 export default function Dashboard() {
   const [inventory, setInventory] = useState<InventorySummary[]>([]);
@@ -16,14 +21,13 @@ export default function Dashboard() {
     []
   );
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
-    const [tracking, setTracking] = useState<TrackingLocation[]>([]);
-
   const [loading, setLoading] = useState(true);
-
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date().toISOString().split("T")[0];
     return today;
   });
+
+  const [recording, setRecording] = useState(false);
 
   const loadData = async (date: string = selectedDate) => {
     try {
@@ -35,7 +39,6 @@ export default function Dashboard() {
       setInventory(data.inventory || []);
       setRecentMovements(data.movements || []);
       setRecentSales(data.sales || []);
-      setTracking(data.tracking || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -84,7 +87,6 @@ export default function Dashboard() {
           <InventoryOverview inventory={inventory} />
         </div>
         <div>
-          {/* pass loadData so QuickActions can refresh */}
           <QuickActions onActionComplete={loadData} />
         </div>
       </div>
@@ -96,7 +98,22 @@ export default function Dashboard() {
         />
         <SalesChart sales={recentSales} />
       </div>
-    <LiveTracking tracking={tracking} />
+
+      <div className="mt-4">
+        <button
+          className={`px-4 py-2 rounded ${
+            recording ? "bg-red-500" : "bg-green-500"
+          } text-white`}
+          onClick={() => setRecording(!recording)}
+        >
+          {recording ? "Stop Recording" : "Start Recording"}
+        </button>
+      </div>
+
+      {recording && <LocationSender driverId="driver_123" />}
+      
+      <LiveTracking />
+
 
     </div>
   );
