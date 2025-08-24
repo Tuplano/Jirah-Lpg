@@ -5,6 +5,7 @@ import type {
   InventorySummary,
   InventoryMovement,
   Sale,
+  TrackingLocation,
 } from "@/lib/type";
 
 // Components
@@ -16,10 +17,13 @@ import LiveTracking from "./components/LiveTracking";
 import LocationSender from "./components/LocationSender";
 
 export default function Dashboard() {
+  const [mode, setMode] = useState<"live" | "record">("live");
+
   const [inventory, setInventory] = useState<InventorySummary[]>([]);
   const [recentMovements, setRecentMovements] = useState<InventoryMovement[]>(
     []
   );
+  const [tracking, setTracking] = useState<TrackingLocation[]>([]);
   const [recentSales, setRecentSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -39,6 +43,7 @@ export default function Dashboard() {
       setInventory(data.inventory || []);
       setRecentMovements(data.movements || []);
       setRecentSales(data.sales || []);
+      setTracking(data.tracking || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -60,12 +65,15 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <div className="text-sm text-gray-500">
           Last updated: {new Date().toLocaleString()}
         </div>
       </div>
+
+      {/* Date picker */}
       <div className="flex items-center space-x-4 mb-4">
         <label
           htmlFor="inventory-date"
@@ -82,6 +90,7 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <InventoryOverview inventory={inventory} />
@@ -91,6 +100,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Activity + Sales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivity
           movements={recentMovements}
@@ -99,22 +109,48 @@ export default function Dashboard() {
         <SalesChart sales={recentSales} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap justify-between items-center">
+        <div className="flex bg-gray-200 rounded-lg overflow-hidden shadow">
+          <button
+            className={`px-4 py-2 text-sm font-medium transition ${
+              mode === "live"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            onClick={() => setMode("live")}
+          >
+            🚀 Live Mode
+          </button>
+          <button
+            className={`px-4 py-2 text-sm font-medium transition ${
+              mode === "record"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            onClick={() => setMode("record")}
+          >
+            📜 View Record
+          </button>
+        </div>
+
+        {/* Start/Stop Recording on the right */}
         <button
-          className={`px-4 py-2 rounded ${
-            recording ? "bg-red-500" : "bg-green-500"
+          className={`px-4 py-2 rounded-lg shadow font-medium transition ${
+            recording
+              ? "bg-red-500 hover:bg-red-600"
+              : "bg-green-500 hover:bg-green-600"
           } text-white`}
           onClick={() => setRecording(!recording)}
         >
-          {recording ? "Stop Recording" : "Start Recording"}
+          {recording ? "⏹ Stop Recording" : "🎥 Start Recording"}
         </button>
       </div>
 
       {recording && <LocationSender driverId="driver_123" />}
-      
-      <LiveTracking />
 
-
+      <div className="mt-4">
+        <LiveTracking tracking={tracking} mode={mode} />
+      </div>
     </div>
   );
 }

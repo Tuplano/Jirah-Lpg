@@ -6,37 +6,102 @@ interface QuickActionsProps {
   onActionComplete: () => void;
 }
 
+interface StockData {
+  date: string;
+  type: string;
+  tank_size: string;
+  quantity: string;
+}
+
+interface DeliveryData {
+  date: string;
+  tank_size: string;
+  quantity: string;
+  customer_name?: string;
+}
+
+interface SaleData {
+  date: string;
+  customer_name: string;
+  tank_size: string;
+  quantity: string;
+  amount: string;
+}
+
 export default function QuickActions({ onActionComplete }: QuickActionsProps) {
   const [showReplenishForm, setShowReplenishForm] = useState(false);
   const [showDeliveryForm, setShowDeliveryForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
 
+  const [stock, setStockData] = useState<StockData>({
+    date: "",
+    type: "",
+    tank_size: "",
+    quantity: "",
+  });
+
+  const [delivery, setDeliveryData] = useState<DeliveryData>({
+    date: "",
+    tank_size: "",
+    quantity: "",
+    customer_name: "",
+  });
+
+  const [sale, setSalesData] = useState<SaleData>({
+    date: "",
+    customer_name: "",
+    tank_size: "",
+    quantity: "",
+    amount: "",
+  });
+
   const tankSizes = ["11kg", "2.7kg"];
 
   const getLocalDateTime = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
 
-
-  // ---------------- HANDLERS ----------------
-  const handleAddStock = async (
-    date: string,
-    tank_size: string,
-    quantity: number
+  // ---------------- SHARED HANDLERS ----------------
+  const handleStockChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
+    const { name, value } = e.target;
+    setStockData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDeliveryChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setDeliveryData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setSalesData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // ---------------- API CALLS ----------------
+  const handleAddStock = async () => {
     try {
       const res = await fetch("/api/movements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, type: "add_stock", tank_size, quantity }),
+        body: JSON.stringify({
+          date: stock.date,
+          type: "add_stock",
+          tank_size: stock.tank_size,
+          quantity: parseInt(stock.quantity),
+        }),
       });
-
       if (!res.ok) throw new Error("Failed to add stock");
       setShowReplenishForm(false);
       onActionComplete();
@@ -46,23 +111,18 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
     }
   };
 
-  const handleReplenish = async (
-    date: string,
-    tank_size: string,
-    quantity: number
-  ) => {
+  const handleReplenish = async () => {
     try {
       const res = await fetch("/api/movements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          date,
+          date: stock.date,
           type: "replenishment",
-          tank_size,
-          quantity,
+          tank_size: stock.tank_size,
+          quantity: parseInt(stock.quantity),
         }),
       });
-
       if (!res.ok) throw new Error("Failed to record replenishment");
       setShowReplenishForm(false);
       onActionComplete();
@@ -72,25 +132,19 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
     }
   };
 
-  const handleDelivery = async (
-    date: string,
-    tank_size: string,
-    quantity: number,
-    customer_name?: string
-  ) => {
+  const handleDelivery = async () => {
     try {
       const res = await fetch("/api/movements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          date,
+          date: delivery.date,
           type: "delivery",
-          tank_size,
-          quantity,
-          customer_name,
+          tank_size: delivery.tank_size,
+          quantity: parseInt(delivery.quantity),
+          customer_name: delivery.customer_name,
         }),
       });
-
       if (!res.ok) throw new Error("Failed to record delivery");
       setShowDeliveryForm(false);
       onActionComplete();
@@ -100,27 +154,20 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
     }
   };
 
-  const handleSale = async (
-    date: string,
-    customer_name: string,
-    tank_size: string,
-    quantity: number,
-    amount: number
-  ) => {
+  const handleSale = async () => {
     try {
       // Record sale
       const resSale = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          date,
-          customer_name,
-          tank_size,
-          quantity,
-          amount,
+          date: sale.date,
+          customer_name: sale.customer_name,
+          tank_size: sale.tank_size,
+          quantity: parseInt(sale.quantity),
+          amount: parseFloat(sale.amount),
         }),
       });
-
       if (!resSale.ok) throw new Error("Failed to record sale");
 
       // Also record inventory movement
@@ -128,11 +175,11 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          date,
+          date: sale.date,
           type: "sale",
-          tank_size,
-          quantity,
-          customer_name,
+          tank_size: sale.tank_size,
+          quantity: parseInt(sale.quantity),
+          customer_name: sale.customer_name,
         }),
       });
 
@@ -151,21 +198,30 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
 
       <div className="space-y-3">
         <button
-          onClick={() => setShowReplenishForm(true)}
+          onClick={() => {
+            setStockData({ date: getLocalDateTime(), type: "", tank_size: "", quantity: "" });
+            setShowReplenishForm(true);
+          }}
           className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
         >
           Add Stock (Replenishment)
         </button>
 
         <button
-          onClick={() => setShowDeliveryForm(true)}
+          onClick={() => {
+            setDeliveryData({ date: getLocalDateTime(), tank_size: "", quantity: "", customer_name: "" });
+            setShowDeliveryForm(true);
+          }}
           className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
         >
           Record Delivery
         </button>
 
         <button
-          onClick={() => setShowSaleForm(true)}
+          onClick={() => {
+            setSalesData({ date: getLocalDateTime(), customer_name: "", tank_size: "", quantity: "", amount: "" });
+            setShowSaleForm(true);
+          }}
           className="w-full bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
         >
           Record Sale
@@ -176,29 +232,32 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
       {showReplenishForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">
-              Add Stock / Replenish Tanks
-            </h3>
+            <h3 className="text-lg font-medium mb-4">Add Stock / Replenish Tanks</h3>
             <div className="space-y-4">
               <input
                 type="datetime-local"
-                id="replenish-date"
-  defaultValue={getLocalDateTime()}
+                name="date"
+                value={stock.date}
+                onChange={handleStockChange}
                 className="w-full border rounded px-3 py-2"
               />
-
               <select
-                id="replenish-size"
+                name="tank_size"
+                value={stock.tank_size}
+                onChange={handleStockChange}
                 className="w-full border rounded px-3 py-2"
               >
+                <option value="">Select size</option>
                 {tankSizes.map((size) => (
                   <option key={size}>{size}</option>
                 ))}
               </select>
               <input
                 type="number"
-                id="replenish-qty"
+                name="quantity"
                 min="1"
+                value={stock.quantity}
+                onChange={handleStockChange}
                 placeholder="Quantity"
                 className="w-full border rounded px-3 py-2"
               />
@@ -211,53 +270,13 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
                 Cancel
               </button>
               <button
-                onClick={() =>
-                  handleReplenish(
-                    (
-                      document.getElementById(
-                        "replenish-date"
-                      ) as HTMLInputElement
-                    ).value,
-                    (
-                      document.getElementById(
-                        "replenish-size"
-                      ) as HTMLSelectElement
-                    ).value,
-                    parseInt(
-                      (
-                        document.getElementById(
-                          "replenish-qty"
-                        ) as HTMLInputElement
-                      ).value
-                    )
-                  )
-                }
+                onClick={handleReplenish}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md"
               >
                 Replenish
               </button>
               <button
-                onClick={() =>
-                  handleAddStock(
-                    (
-                      document.getElementById(
-                        "replenish-date"
-                      ) as HTMLInputElement
-                    ).value,
-                    (
-                      document.getElementById(
-                        "replenish-size"
-                      ) as HTMLSelectElement
-                    ).value,
-                    parseInt(
-                      (
-                        document.getElementById(
-                          "replenish-qty"
-                        ) as HTMLInputElement
-                      ).value
-                    )
-                  )
-                }
+                onClick={handleAddStock}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md"
               >
                 Add Stock
@@ -275,28 +294,36 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
             <div className="space-y-4">
               <input
                 type="datetime-local"
-                id="delivery-date"
-  defaultValue={getLocalDateTime()}
+                name="date"
+                value={delivery.date}
+                onChange={handleDeliveryChange}
                 className="w-full border rounded px-3 py-2"
               />
               <select
-                id="delivery-size"
+                name="tank_size"
+                value={delivery.tank_size}
+                onChange={handleDeliveryChange}
                 className="w-full border rounded px-3 py-2"
               >
+                <option value="">Select size</option>
                 {tankSizes.map((size) => (
                   <option key={size}>{size}</option>
                 ))}
               </select>
               <input
                 type="number"
-                id="delivery-qty"
+                name="quantity"
                 min="1"
+                value={delivery.quantity}
+                onChange={handleDeliveryChange}
                 placeholder="Quantity"
                 className="w-full border rounded px-3 py-2"
               />
               <input
                 type="text"
-                id="delivery-customer"
+                name="customer_name"
+                value={delivery.customer_name}
+                onChange={handleDeliveryChange}
                 placeholder="Customer name (optional)"
                 className="w-full border rounded px-3 py-2"
               />
@@ -309,32 +336,7 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
                 Cancel
               </button>
               <button
-                onClick={() =>
-                  handleDelivery(
-                    (
-                      document.getElementById(
-                        "delivery-date"
-                      ) as HTMLInputElement
-                    ).value,
-                    (
-                      document.getElementById(
-                        "delivery-size"
-                      ) as HTMLSelectElement
-                    ).value,
-                    parseInt(
-                      (
-                        document.getElementById(
-                          "delivery-qty"
-                        ) as HTMLInputElement
-                      ).value
-                    ),
-                    (
-                      document.getElementById(
-                        "delivery-customer"
-                      ) as HTMLInputElement
-                    ).value
-                  )
-                }
+                onClick={handleDelivery}
                 className="px-4 py-2 bg-green-600 text-white rounded-md"
               >
                 Record Delivery
@@ -352,36 +354,46 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
             <div className="space-y-4">
               <input
                 type="datetime-local"
-                id="sale-date"
-  defaultValue={getLocalDateTime()}
+                name="date"
+                value={sale.date}
+                onChange={handleSaleChange}
                 className="w-full border rounded px-3 py-2"
               />
               <input
                 type="text"
-                id="sale-customer"
+                name="customer_name"
+                value={sale.customer_name}
+                onChange={handleSaleChange}
                 placeholder="Customer name"
                 className="w-full border rounded px-3 py-2"
               />
               <select
-                id="sale-size"
+                name="tank_size"
+                value={sale.tank_size}
+                onChange={handleSaleChange}
                 className="w-full border rounded px-3 py-2"
               >
+                <option value="">Select size</option>
                 {tankSizes.map((size) => (
                   <option key={size}>{size}</option>
                 ))}
               </select>
               <input
                 type="number"
-                id="sale-qty"
+                name="quantity"
                 min="1"
+                value={sale.quantity}
+                onChange={handleSaleChange}
                 placeholder="Quantity"
                 className="w-full border rounded px-3 py-2"
               />
               <input
                 type="number"
-                id="sale-amount"
+                name="amount"
                 step="0.01"
                 min="0"
+                value={sale.amount}
+                onChange={handleSaleChange}
                 placeholder="Amount ₱"
                 className="w-full border rounded px-3 py-2"
               />
@@ -394,30 +406,7 @@ export default function QuickActions({ onActionComplete }: QuickActionsProps) {
                 Cancel
               </button>
               <button
-                onClick={() =>
-                  handleSale(
-                    (document.getElementById("sale-date") as HTMLInputElement)
-                      .value,
-                    (
-                      document.getElementById(
-                        "sale-customer"
-                      ) as HTMLInputElement
-                    ).value,
-                    (document.getElementById("sale-size") as HTMLSelectElement)
-                      .value,
-                    parseInt(
-                      (document.getElementById("sale-qty") as HTMLInputElement)
-                        .value
-                    ),
-                    parseFloat(
-                      (
-                        document.getElementById(
-                          "sale-amount"
-                        ) as HTMLInputElement
-                      ).value
-                    )
-                  )
-                }
+                onClick={handleSale}
                 className="px-4 py-2 bg-purple-600 text-white rounded-md"
               >
                 Record Sale
